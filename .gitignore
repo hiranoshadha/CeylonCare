@@ -1,0 +1,16 @@
+# Ignore node_modules in Backend
+Backend/node_modules/
+
+# Ignore node_modules globally in the project
+node_modules/
+
+# Ignore other common files
+*.log
+*.pyc
+*.bak
+Backend/uploads/
+Backend/credentials/
+app/build/
+expo/build/
+.DS_Store
+.env
