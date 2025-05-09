@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, Text, TextInput, StyleSheet, TouchableOpacity, 
-  ScrollView, SafeAreaView, StatusBar, Platform 
+import {
+  View, Text, TextInput, StyleSheet, TouchableOpacity,
+  ScrollView, SafeAreaView, StatusBar, Alert
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { RadioButton } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface FormData {
+  userId: string;
   age: string;
   weight: string;
   height: string;
@@ -22,9 +24,9 @@ interface FormData {
   hypertension: string;
 }
 
-const HealthRiskApp = () => {
-  const [activeTab, setActiveTab] = useState<'hypertension' | 'diabetes'>('hypertension');
+const HealthRiskApp = ({ navigation }: any) => {
   const [formData, setFormData] = useState<FormData>({
+    userId : '',
     age: '',
     weight: '',
     height: '',
@@ -40,7 +42,8 @@ const HealthRiskApp = () => {
     hypertension: '0',
   });
   const [warnings, setWarnings] = useState<string[]>([]);
-  const [result, setResult] = useState<string>('');
+  const [diabetesResult, setDiabetesResult] = useState<string>('');
+  const [hypertensionResult, setHypertensionResult] = useState<string>('');
 
   useEffect(() => {
     calculateBMI();
@@ -49,7 +52,7 @@ const HealthRiskApp = () => {
   const calculateBMI = () => {
     const height = parseFloat(formData.height);
     const weight = parseFloat(formData.weight);
-    
+
     if (height > 0 && weight > 0) {
       const bmi = (weight / (height * height)).toFixed(2);
       setFormData(prev => ({ ...prev, bmi }));
@@ -62,59 +65,68 @@ const HealthRiskApp = () => {
 
   const validateForm = (): boolean => {
     const newWarnings: string[] = [];
-    
+
     if (parseFloat(formData.age) <= 0 || parseFloat(formData.age) > 120) {
       newWarnings.push("⚠ Age must be between 1 and 120.");
     }
-    
+
     if (parseFloat(formData.weight) <= 0 || parseFloat(formData.weight) > 300) {
       newWarnings.push("⚠ Weight must be between 1 and 300 kg.");
     }
-    
+
     if (parseFloat(formData.height) <= 0.5 || parseFloat(formData.height) > 2.5) {
       newWarnings.push("⚠ Height must be between 0.5 and 2.5 meters.");
     }
-    
-    if (activeTab === 'diabetes') {
-      if (parseFloat(formData.bloodGlucoseLevel) < 2 || parseFloat(formData.bloodGlucoseLevel) > 30) {
-        newWarnings.push("⚠ Blood Glucose Level must be between 2 and 30 mmol/L.");
-      }
-      
-      if (parseFloat(formData.hba1cLevel) < 2 || parseFloat(formData.hba1cLevel) > 20) {
-        newWarnings.push("⚠ HbA1c Level must be between 2% and 20%.");
-      }
-    } else {
-      if (parseFloat(formData.avgGlucoseLevel) <= 20 || parseFloat(formData.avgGlucoseLevel) > 600) {
-        newWarnings.push("⚠ Glucose level is medically impossible.");
-      }
+
+    if (parseFloat(formData.avgGlucoseLevel) <= 20 || parseFloat(formData.avgGlucoseLevel) > 600) {
+      newWarnings.push("⚠ Average glucose level is medically impossible.");
     }
-    
+
+    if (parseFloat(formData.bloodGlucoseLevel) < 2 || parseFloat(formData.bloodGlucoseLevel) > 30) {
+      newWarnings.push("⚠ Blood Glucose Level must be between 2 and 30 mmol/L.");
+    }
+
+    if (parseFloat(formData.hba1cLevel) < 2 || parseFloat(formData.hba1cLevel) > 20) {
+      newWarnings.push("⚠ HbA1c Level must be between 2% and 20%.");
+    }
+
     setWarnings(newWarnings);
     return newWarnings.length === 0;
   };
 
   const calculateHypertensionRisk = () => {
     // Simplified risk calculation logic for hypertension
-    setResult("Your hypertension risk assessment has been submitted.");
+    let riskLevel = "Low Risk";
+
+    // Basic hypertension risk assessment
+    if (formData.smokingStatus === "smokes") {
+      riskLevel = "High Risk";
+    } else if (parseFloat(formData.age) > 65) {
+      riskLevel = "Medium Risk";
+    } else if (formData.heartDisease === "1") {
+      riskLevel = "High Risk";
+    }
+
+    setHypertensionResult(`Hypertension Risk: ${riskLevel}`);
   };
 
   const calculateDiabetesRisk = () => {
     let riskScore = 0;
     let riskLevel = "Low Risk";
-    
+
     // Simplified diabetes risk calculation
     if (parseFloat(formData.hba1cLevel) >= 6.5) {
       riskLevel = "High Risk";
     } else if (parseFloat(formData.hba1cLevel) >= 5.7) {
       riskLevel = "Medium Risk";
     }
-    
+
     if (parseFloat(formData.bloodGlucoseLevel) >= 7.0) {
       riskLevel = "High Risk";
     } else if (parseFloat(formData.bloodGlucoseLevel) >= 5.6) {
       riskLevel = "Medium Risk";
     }
-    
+
     if (riskLevel === "Low Risk") {
       if (parseFloat(formData.age) > 60) riskScore++;
       if (formData.hypertension === "1") riskScore++;
@@ -123,48 +135,63 @@ const HealthRiskApp = () => {
       if (formData.smokingStatus === "smokes") riskScore += 2;
       if (parseFloat(formData.bmi) > 25) riskScore += 2;
       if (parseFloat(formData.bmi) > 30) riskScore += 3;
-      
+
       if (riskScore >= 5) riskLevel = "High Risk";
       else if (riskScore >= 3) riskLevel = "Medium Risk";
       else if (riskScore === 0) riskLevel = "No Risk";
     }
-    
-    setResult(`Your Diabetes Risk Level: ${riskLevel}`);
+
+    setDiabetesResult(`Diabetes Risk: ${riskLevel}`);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validateForm()) {
-      if (activeTab === 'hypertension') {
-        calculateHypertensionRisk();
-      } else {
-        calculateDiabetesRisk();
+      calculateHypertensionRisk();
+      calculateDiabetesRisk();
+      const userId = await AsyncStorage.getItem("userId");
+      if (userId) {
+        formData.userId = userId;
+      }
+  
+      try {
+        console.log("Sending health risk data to backend...");
+        const response = await fetch("http://localhost:5000/riskassessment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
+  
+        const responseData = await response.json();
+        console.log("Response from backend:", responseData);
+  
+        if (response.ok) {
+          Alert.alert("Success", "Health risk assessment completed successfully");
+          // You can navigate to a results page if needed
+          // navigation.navigate("Results");
+        } else {
+          throw new Error(responseData.error || "Assessment submission failed");
+        }
+      } catch (error: any) {
+        console.error("Error in health risk assessment:", error.message);
+        Alert.alert("Error", error.message);
       }
     }
-  };
+  };  
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" />
       <View style={styles.container}>
-        <Text style={styles.title}>Health Risk Assessment</Text>
-        
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'hypertension' && styles.activeTab]}
-            onPress={() => setActiveTab('hypertension')}
-          >
-            <Text style={styles.tabText}>Hypertension</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === 'diabetes' && styles.activeTab]}
-            onPress={() => setActiveTab('diabetes')}
-          >
-            <Text style={styles.tabText}>Diabetes</Text>
-          </TouchableOpacity>
-        </View>
-        
+        <Text style={styles.title}>Comprehensive Health Risk Assessment</Text>
+
         <ScrollView style={styles.formContainer}>
-          {/* Common form fields */}
+          {/* Basic Information */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
+          </View>
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>Age (years):</Text>
             <TextInput
@@ -174,7 +201,26 @@ const HealthRiskApp = () => {
               onChangeText={(value) => handleInputChange('age', value)}
             />
           </View>
-          
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Gender:</Text>
+            <View style={styles.radioGroup}>
+              <RadioButton.Group
+                value={formData.gender}
+                onValueChange={(value: string) => handleInputChange('gender', value)}
+              >
+                <View style={styles.radioOption}>
+                  <RadioButton value="Male" />
+                  <Text>Male</Text>
+                </View>
+                <View style={styles.radioOption}>
+                  <RadioButton value="Female" />
+                  <Text>Female</Text>
+                </View>
+              </RadioButton.Group>
+            </View>
+          </View>
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>Weight (kg):</Text>
             <TextInput
@@ -184,7 +230,7 @@ const HealthRiskApp = () => {
               onChangeText={(value) => handleInputChange('weight', value)}
             />
           </View>
-          
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>Height (m):</Text>
             <TextInput
@@ -194,7 +240,7 @@ const HealthRiskApp = () => {
               onChangeText={(value) => handleInputChange('height', value)}
             />
           </View>
-          
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>BMI (auto-calculated):</Text>
             <TextInput
@@ -203,13 +249,19 @@ const HealthRiskApp = () => {
               editable={false}
             />
           </View>
-          
+
+          {/* Medical History */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Medical History</Text>
+          </View>
+
           <View style={styles.formGroup}>
             <Text style={styles.label}>Heart Disease:</Text>
             <View style={styles.radioGroup}>
               <RadioButton.Group
                 value={formData.heartDisease}
-                onValueChange={(value: string) => handleInputChange('heartDisease', value)}              >
+                onValueChange={(value: string) => handleInputChange('heartDisease', value)}
+              >
                 <View style={styles.radioOption}>
                   <RadioButton value="0" />
                   <Text>No</Text>
@@ -221,129 +273,111 @@ const HealthRiskApp = () => {
               </RadioButton.Group>
             </View>
           </View>
-          
-          {/* Conditional form fields based on active tab */}
-          {activeTab === 'hypertension' ? (
-            <>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Average Glucose Level (mg/dL):</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={formData.avgGlucoseLevel}
-                  onChangeText={(value) => handleInputChange('avgGlucoseLevel', value)}
-                />
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Smoking Status:</Text>
-                <Picker
-                  selectedValue={formData.smokingStatus}
-                  onValueChange={(value: string) => handleInputChange('smokingStatus', value)}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Smokes" value="smokes" />
-                  <Picker.Item label="Formerly Smoked" value="formerly smoked" />
-                  <Picker.Item label="Never Smoked" value="never smoked" />
-                </Picker>
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Work Type:</Text>
-                <Picker
-                  selectedValue={formData.workType}
-                  onValueChange={(value: string) => handleInputChange('workType', value)}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Select" value="" />
-                  <Picker.Item label="Private" value="Private" />
-                  <Picker.Item label="Self-employed" value="Self-employed" />
-                  <Picker.Item label="Government Job" value="Govt_job" />
-                  <Picker.Item label="Children" value="children" />
-                </Picker>
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Residence Type:</Text>
-                <Picker
-                  selectedValue={formData.residenceType}
-                  onValueChange={(value: string) => handleInputChange('residenceType', value)}
-                  style={styles.picker}
-                >
-                  <Picker.Item label="Select" value="" />
-                  <Picker.Item label="Urban" value="Urban" />
-                  <Picker.Item label="Rural" value="Rural" />
-                </Picker>
-              </View>
-            </>
-          ) : (
-            <>
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Gender:</Text>
-                <View style={styles.radioGroup}>
-                  <RadioButton.Group
-                    value={formData.gender}
-                    onValueChange={(value: string) => handleInputChange('gender', value)}
-                  >
-                    <View style={styles.radioOption}>
-                      <RadioButton value="Male" />
-                      <Text>Male</Text>
-                    </View>
-                    <View style={styles.radioOption}>
-                      <RadioButton value="Female" />
-                      <Text>Female</Text>
-                    </View>
-                  </RadioButton.Group>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Hypertension:</Text>
+            <View style={styles.radioGroup}>
+              <RadioButton.Group
+                value={formData.hypertension}
+                onValueChange={(value: string) => handleInputChange('hypertension', value)}
+              >
+                <View style={styles.radioOption}>
+                  <RadioButton value="0" />
+                  <Text>No</Text>
                 </View>
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Hypertension:</Text>
-                <View style={styles.radioGroup}>
-                  <RadioButton.Group
-                    value={formData.hypertension}
-                    onValueChange={(value: string) => handleInputChange('hypertension', value)}
-                  >
-                    <View style={styles.radioOption}>
-                      <RadioButton value="0" />
-                      <Text>No</Text>
-                    </View>
-                    <View style={styles.radioOption}>
-                      <RadioButton value="1" />
-                      <Text>Yes</Text>
-                    </View>
-                  </RadioButton.Group>
+                <View style={styles.radioOption}>
+                  <RadioButton value="1" />
+                  <Text>Yes</Text>
                 </View>
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Blood Glucose Level (mmol/L):</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={formData.bloodGlucoseLevel}
-                  onChangeText={(value) => handleInputChange('bloodGlucoseLevel', value)}
-                />
-              </View>
-              
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>HbA1c Level (%):</Text>
-                <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  value={formData.hba1cLevel}
-                  onChangeText={(value) => handleInputChange('hba1cLevel', value)}
-                />
-              </View>
-            </>
-          )}
-          
+              </RadioButton.Group>
+            </View>
+          </View>
+
+          {/* Lifestyle */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Lifestyle</Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Smoking Status:</Text>
+            <Picker
+              selectedValue={formData.smokingStatus}
+              onValueChange={(value: string) => handleInputChange('smokingStatus', value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Smokes" value="smokes" />
+              <Picker.Item label="Formerly Smoked" value="formerly smoked" />
+              <Picker.Item label="Never Smoked" value="never smoked" />
+            </Picker>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Work Type:</Text>
+            <Picker
+              selectedValue={formData.workType}
+              onValueChange={(value: string) => handleInputChange('workType', value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Select" value="" />
+              <Picker.Item label="Private" value="Private" />
+              <Picker.Item label="Self-employed" value="Self-employed" />
+              <Picker.Item label="Government Job" value="Govt_job" />
+              <Picker.Item label="Children" value="children" />
+            </Picker>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Residence Type:</Text>
+            <Picker
+              selectedValue={formData.residenceType}
+              onValueChange={(value: string) => handleInputChange('residenceType', value)}
+              style={styles.picker}
+            >
+              <Picker.Item label="Select" value="" />
+              <Picker.Item label="Urban" value="Urban" />
+              <Picker.Item label="Rural" value="Rural" />
+            </Picker>
+          </View>
+
+          {/* Glucose Measurements */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Glucose Measurements</Text>
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Average Glucose Level (mg/dL):</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={formData.avgGlucoseLevel}
+              onChangeText={(value) => handleInputChange('avgGlucoseLevel', value)}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Blood Glucose Level (mmol/L):</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={formData.bloodGlucoseLevel}
+              onChangeText={(value) => handleInputChange('bloodGlucoseLevel', value)}
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>HbA1c Level (%):</Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={formData.hba1cLevel}
+              onChangeText={(value) => handleInputChange('hba1cLevel', value)}
+            />
+          </View>
+
           <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-            <Text style={styles.buttonText}>
-              {activeTab === 'hypertension' ? 'Check Hypertension Risk' : 'Check Diabetes Risk'}
-            </Text>
+            <Text style={styles.buttonText}>Assess Health Risks</Text>
           </TouchableOpacity>
-          
+
           {warnings.length > 0 && (
             <View style={styles.warningsContainer}>
               {warnings.map((warning, index) => (
@@ -351,9 +385,16 @@ const HealthRiskApp = () => {
               ))}
             </View>
           )}
-          
-          {result !== '' && (
-            <Text style={styles.resultText}>{result}</Text>
+
+          {(diabetesResult !== '' || hypertensionResult !== '') && (
+            <View style={styles.resultsContainer}>
+              {hypertensionResult !== '' && (
+                <Text style={styles.resultText}>{hypertensionResult}</Text>
+              )}
+              {diabetesResult !== '' && (
+                <Text style={styles.resultText}>{diabetesResult}</Text>
+              )}
+            </View>
           )}
         </ScrollView>
       </View>
@@ -377,29 +418,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  tabContainer: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    padding: 10,
-    alignItems: 'center',
-    backgroundColor: '#80deea',
-    borderRadius: 5,
-    marginHorizontal: 5,
-  },
-  activeTab: {
-    backgroundColor: '#00695c',
-  },
-  tabText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
   formContainer: {
     backgroundColor: '#ffffffcc',
     borderRadius: 10,
     padding: 15,
+  },
+  sectionHeader: {
+    backgroundColor: '#80deea',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    fontWeight: 'bold',
+    color: '#004d40',
+    fontSize: 16,
   },
   formGroup: {
     marginBottom: 15,
@@ -454,14 +488,18 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 5,
   },
-  resultText: {
+  resultsContainer: {
     marginTop: 20,
+    padding: 15,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 5,
+  },
+  resultText: {
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
-    padding: 10,
-    backgroundColor: '#e8f5e9',
-    borderRadius: 5,
+    marginBottom: 10,
+    color: '#004d40',
   }
 });
 

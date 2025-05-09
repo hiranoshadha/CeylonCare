@@ -17,6 +17,7 @@ const {
 } = require("./controllers/healthController");
 const { getChatRecommendation } = require("./controllers/chatController");
 const { getARRecommendations, getTherapyDetails } = require("./controllers/arController");
+const { getRiskAssessmentById, getRiskAssessmentByUserId, getAllRiskAssessments, createRiskAssessment, updateRiskAssessment, deleteRiskAssessment } = require("./controllers/riskAssessController");
 
 const app = express();
 app.use(cors({ origin: "*" }));
@@ -42,6 +43,14 @@ app.get("/therapy_details/:therapyName", getTherapyDetails);
 
 // Chatbot Routes
 app.post('/healthChat/:userId', getChatRecommendation);
+
+// Risk Assessment Routes
+app.get("/riskassessment/:id", getRiskAssessmentById);
+app.get("/riskassessment/user/:userId", getRiskAssessmentByUserId);
+app.get("/riskassessments", getAllRiskAssessments);
+app.post("/riskassessment", createRiskAssessment);
+app.put("/riskassessment/:id", updateRiskAssessment);
+app.delete("/riskassessment/:id", deleteRiskAssessment);
 
 const PORT = 5000;
 app.listen(PORT, () => {

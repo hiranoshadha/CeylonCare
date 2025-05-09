@@ -16,6 +16,7 @@ import ChatScreen from "./pages/Chatbot_component/ChatScreen";
 import TherapyRecommendations from "./pages/AR_component/TherapyRecommendations";
 import TherapyDetails from "./pages/AR_component/TherapyDetails";
 import ARAvatarScreen from "./pages/AR_component/ARAvatarScreen";
+import HealthRiskApp from "./pages/HealthRiskApp";
 
 const Stack = createStackNavigator();
 
@@ -97,6 +98,14 @@ const StackNavigator = () => {
       <Stack.Screen
         name="ChatScreen"
         component={ChatScreen}
+        options={{ headerShown: false }}
+      />
+      
+      
+      
+      <Stack.Screen
+        name="HealthRiskApp"
+        component={HealthRiskApp}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>

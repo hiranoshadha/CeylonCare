@@ -26,7 +26,7 @@ const Login = ({ navigation }: any) => {
   
     try {
       console.log("Sending login request...");
-      const response = await fetch("http://192.168.60.22:5000/login", {
+      const response = await fetch("http://localhost:5000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,7 +56,7 @@ const Login = ({ navigation }: any) => {
       await AsyncStorage.setItem("userId", user.uid);
   
       Alert.alert("Success", "Logged in successfully!");
-      navigation.navigate("Onboarding");
+      navigation.navigate("HealthRiskApp");
     } catch (error) {
       console.error("Login error:", error.message);
   
