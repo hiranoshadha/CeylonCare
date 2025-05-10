@@ -49,7 +49,7 @@ const TherapyRecommendations: React.FC<TherapyRecommendationsProps> = ({
       }
 
       const response = await axios.get<{ recommendations: TherapyItem[] }>(
-        `http://localhost:5000/ar_therapy/${userId}`
+        `http://192.168.78.225:5000/ar_therapy/${userId}`
       );
 
       if (!response.data || !response.data.recommendations.length) {

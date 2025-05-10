@@ -33,7 +33,7 @@ const getChatRecommendation = async (req, res) => {
     console.log(`[DEBUG] User health condition: ${userHealthData.healthCondition || 'general'}`);
 
     // Send chat message and health condition to Flask app
-    const flaskResponse = await axios.post("http://localhost:5001/chat", {
+    const flaskResponse = await axios.post("http://192.168.78.225:5001/chat", {
       message: userInput,
       userId: userId,
       healthCondition: userHealthData.healthCondition || "general",
