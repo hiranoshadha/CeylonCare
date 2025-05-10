@@ -46,7 +46,7 @@ const ViewHealthRisk = ({ navigation }: any) => {
                 return;
             }
 
-            const response = await fetch(`http://192.168.78.65:5000/riskassessment/user/${userId}`, {
+            const response = await fetch(`http://192.168.60.22:5000/riskassessment/user/${userId}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -82,7 +82,7 @@ const ViewHealthRisk = ({ navigation }: any) => {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            const response = await fetch(`http://192.168.78.65:5000/riskassessment/${riskId}`, {
+                            const response = await fetch(`http://192.168.60.22:5000/riskassessment/${riskId}`, {
                                 method: "DELETE",
                                 headers: {
                                     "Content-Type": "application/json",

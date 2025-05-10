@@ -162,7 +162,7 @@ const EditHealthRisk = ({ route, navigation }: any) => {
                     hypertensionRiskLevel
                 };
 
-                const response = await fetch(`http://192.168.78.65:5000/riskassessment/${riskData.id}`, {
+                const response = await fetch(`http://192.168.60.22:5000/riskassessment/${riskData.id}`, {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

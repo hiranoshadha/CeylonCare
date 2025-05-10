@@ -14,7 +14,7 @@ const getARRecommendations = async (req, res) => {
   console.log(`[DEBUG] Received request to fetch therapy for user: ${userId}`);
 
   try {
-    const response = await axios.get(`http://192.168.78.65:5000/healthData/${userId}`);
+    const response = await axios.get(`http://192.168.60.22:5000/healthData/${userId}`);
     console.log(`[DEBUG] Fetching health data for user: ${userId}, Response status: ${response.status}`);
 
     if (response.status !== 200) {
@@ -24,7 +24,7 @@ const getARRecommendations = async (req, res) => {
     const userHealthData = response.data;
     console.log("[DEBUG] Fetched user health data:", JSON.stringify(userHealthData, null, 2));
 
-    const flaskResponse = await axios.post("http://192.168.78.65:5001/predict", userHealthData);
+    const flaskResponse = await axios.post("http://192.168.60.22:5001/predict", userHealthData);
 
     console.log("[DEBUG] Flask API Full Response:", JSON.stringify(flaskResponse.data, null, 2));
 

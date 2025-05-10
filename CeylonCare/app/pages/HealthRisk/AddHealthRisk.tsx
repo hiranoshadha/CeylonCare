@@ -156,7 +156,7 @@ const AddHealthRisk = ({ navigation }: any) => {
   
       try {
         console.log("Sending health risk data to backend...");
-        const response = await fetch("http://192.168.78.65:5000/riskassessment", {
+        const response = await fetch("http://192.168.60.22:5000/riskassessment", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
