@@ -54,7 +54,7 @@ app.delete("/riskassessment/:id", deleteRiskAssessment);
 
 const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`[DEBUG] Backend server running at http://192.168.78.225:${PORT}`);
+  console.log(`[DEBUG] Backend server running at http://192.168.78.65:${PORT}`);
   console.log('[DEBUG] Registered routes:', app._router.stack
     .filter(r => r.route)
     .map(r => `${r.route.path} (${Object.keys(r.route.methods).join(', ')})`));

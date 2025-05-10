@@ -18,6 +18,7 @@ import TherapyDetails from "./pages/AR_component/TherapyDetails";
 import ARAvatarScreen from "./pages/AR_component/ARAvatarScreen";
 import ViewHealthRisk from "./pages/HealthRisk/ViewHealthRisk";
 import AddHealthRisk from "./pages/HealthRisk/AddHealthRisk";
+import EditHealthRisk from "./pages/HealthRisk/EditHealthRisk";
 
 const Stack = createStackNavigator();
 
@@ -112,6 +113,11 @@ const StackNavigator = () => {
       <Stack.Screen
         name="ViewHealthRisk"
         component={ViewHealthRisk}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="EditHealthRisk"
+        component={EditHealthRisk}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
