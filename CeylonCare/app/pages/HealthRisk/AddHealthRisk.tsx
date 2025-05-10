@@ -146,39 +146,39 @@ const AddHealthRisk = ({ navigation }: any) => {
 
   const handleSubmit = async () => {
     navigation.navigate("ViewHealthRisk");
-    // if (validateForm()) {
-    //   calculateHypertensionRisk();
-    //   calculateDiabetesRisk();
-    //   const userId = await AsyncStorage.getItem("userId");
-    //   if (userId) {
-    //     formData.userId = userId;
-    //   }
+    if (validateForm()) {
+      calculateHypertensionRisk();
+      calculateDiabetesRisk();
+      const userId = await AsyncStorage.getItem("userId");
+      if (userId) {
+        formData.userId = userId;
+      }
   
-    //   try {
-    //     console.log("Sending health risk data to backend...");
-    //     const response = await fetch("http://192.168.78.65:5000/riskassessment", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //       },
-    //       body: JSON.stringify(formData),
-    //     });
+      try {
+        console.log("Sending health risk data to backend...");
+        const response = await fetch("http://192.168.78.65:5000/riskassessment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        });
   
-    //     const responseData = await response.json();
-    //     console.log("Response from backend:", responseData);
+        const responseData = await response.json();
+        console.log("Response from backend:", responseData);
   
-    //     if (response.ok) {
-    //       Alert.alert("Success", "Health risk assessment completed successfully");
-    //       // You can navigate to a results page if needed
-    //       navigation.navigate("ViewHealthRisk");
-    //     } else {
-    //       throw new Error(responseData.error || "Assessment submission failed");
-    //     }
-    //   } catch (error: any) {
-    //     console.error("Error in health risk assessment:", error.message);
-    //     Alert.alert("Error", error.message);
-    //   }
-    // }
+        if (response.ok) {
+          Alert.alert("Success", "Health risk assessment completed successfully");
+          // You can navigate to a results page if needed
+          navigation.navigate("ViewHealthRisk");
+        } else {
+          throw new Error(responseData.error || "Assessment submission failed");
+        }
+      } catch (error: any) {
+        console.error("Error in health risk assessment:", error.message);
+        Alert.alert("Error", error.message);
+      }
+    }
   };  
 
   return (
