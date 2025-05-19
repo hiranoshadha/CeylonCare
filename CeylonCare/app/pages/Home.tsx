@@ -77,6 +77,7 @@ const Home = ({ navigation }: any) => {
       const data = await response.json();
       console.log("User profile fetched successfully:", data);
       setUserData(data);
+      await AsyncStorage.setItem("userName", data.fullName);
     } catch (error) {
       console.error("Error fetching user profile:", error.message);
       Alert.alert("Error", error.message);

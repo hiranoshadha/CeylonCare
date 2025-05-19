@@ -41,6 +41,7 @@ const Login = ({ navigation }: any) => {
       }
   
       const responseData = await response.json();
+      console.log("Login successful. Response data:", responseData);  
       const { user, loginTimestamp } = responseData;
   
       console.log("Login successful. Storing session data...");
@@ -51,7 +52,7 @@ const Login = ({ navigation }: any) => {
       } else {
         await AsyncStorage.setItem("loginTimestamp", loginTimestamp);
       }
-  
+      console.log("User data:", user);
       // Store userId safely
       await AsyncStorage.setItem("userId", user.uid);
   
